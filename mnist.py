@@ -103,7 +103,7 @@ plt.title("Training Loss over Epochs")
 plt.legend()
 plt.grid(True)
 
-plt.savefig("model.png")
+plt.savefig("trainingloss.png")
 
 plt.figure(figsize=(8, 5))
 plt.plot(epochs, test_losses, label="Test loss")
@@ -111,4 +111,4 @@ plt.title("Test Loss over Epochs")
 plt.legend()
 plt.grid(True)
 
-plt.savefig("model2.png")
+plt.savefig("testloss.png")
