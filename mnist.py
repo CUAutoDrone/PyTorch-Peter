@@ -20,6 +20,18 @@ train_dataset = torchvision.datasets.MNIST(
 training_set_size = 64
 train_loader = DataLoader(train_dataset, batch_size=training_set_size, shuffle=True)
 
+test_dataset = torchvision.datasets.MNIST(
+    "files/",
+    download=True,
+    transform=torchvision.transforms.ToTensor(),
+    target_transform=torchvision.transforms.Compose(
+        [lambda x: torch.LongTensor([x]), lambda x: F.one_hot(x, 10)]
+    ),
+)
+
+test_set_size = 64
+test_loader = DataLoader(test_dataset, batch_size=test_set_size, shuffle=True)
+
 
 class Model(nn.Module):
     def __init__(self):
@@ -42,3 +54,61 @@ class Model(nn.Module):
 net = Model()
 input = torch.rand(1, 1, 28, 28)
 output = net(input)
+
+optimizer = torch.optim.Adam(net.parameters(), lr=0.0001)
+
+criterion = nn.CrossEntropyLoss()
+
+train_losses = []
+test_losses = []
+
+
+def train_epoch(model, optimizer, dataloader):
+    model.train()
+
+    for input, labels in dataloader:
+        optimizer.zero_grad()
+        output = model(input)
+        labels = torch.squeeze(labels, dim=1).float()
+        loss = criterion(output, labels)
+        train_losses.append(loss.item())
+        loss.backward()
+        optimizer.step()
+    return train_losses
+
+
+def test_epoch(model, dataloader):
+    model.eval()
+
+    with torch.no_grad():
+        for input, labels in dataloader:
+            output = model(input)
+            labels = torch.squeeze(labels, dim=1).float()
+            loss = criterion(output, labels)
+            test_losses.append(loss.item())
+    return test_losses
+
+
+for i in range(10):
+    a = train_epoch(net, optimizer, train_loader)
+    print(np.mean(a))
+    b = test_epoch(net, test_loader)
+    print(np.mean(b))
+torch.save(net, "model.pth")
+
+epochs = range(1, len(train_losses) + 1)
+plt.figure(figsize=(8, 5))
+plt.plot(epochs, train_losses, label="Training loss")
+plt.title("Training Loss over Epochs")
+plt.legend()
+plt.grid(True)
+
+plt.savefig("model.png")
+
+plt.figure(figsize=(8, 5))
+plt.plot(epochs, test_losses, label="Test loss")
+plt.title("Test Loss over Epochs")
+plt.legend()
+plt.grid(True)
+
+plt.savefig("model2.png")
